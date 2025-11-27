@@ -1,0 +1,82 @@
+#!/bin/bash
+
+echo "🔥 FIREBASE & FACEBOOK SDK INSTALLER"
+echo "===================================="
+echo ""
+
+# Check if we're in the scripts directory and navigate to PCPOScompanion
+if [ -f "../PCPOScompanion/PCPOScompanion.xcodeproj/project.pbxproj" ]; then
+    cd ../PCPOScompanion
+    echo "✅ Navigated to PCPOScompanion directory"
+elif [ -f "PCPOScompanion.xcodeproj/project.pbxproj" ]; then
+    echo "✅ Already in PCPOScompanion directory"
+else
+    echo "❌ Error: Cannot find PCPOScompanion.xcodeproj"
+    echo "Please run from either:"
+    echo "  - /Users/pcpos/Desktop/MegamanCompanion/scripts"
+    echo "  - /Users/pcpos/Desktop/MegamanCompanion/PCPOScompanion"
+    exit 1
+fi
+
+echo "✅ In correct directory"
+echo ""
+
+# Instructions for adding Firebase via Xcode
+echo "📦 STEP 1: Add Firebase SDK via Xcode"
+echo "────────────────────────────────────────"
+echo ""
+echo "1. Open PCPOScompanion.xcodeproj in Xcode"
+echo "2. In Xcode menu: File → Add Package Dependencies..."
+echo "3. Paste this URL:"
+echo "   https://github.com/firebase/firebase-ios-sdk"
+echo ""
+echo "4. Set 'Dependency Rule' to: 'Up to Next Major Version' (11.0.0)"
+echo "5. Click 'Add Package'"
+echo ""
+echo "6. When prompted, SELECT these products:"
+echo "   ✅ FirebaseAuth"
+echo "   ✅ FirebaseFirestore"
+echo "   ✅ FirebaseStorage"
+echo "   ✅ FirebaseAnalytics"
+echo ""
+echo "7. Click 'Add Package' again"
+echo ""
+echo "⏳ This will take 2-3 minutes to download and integrate..."
+echo ""
+read -p "Press ENTER when you've completed Step 1..."
+
+echo ""
+echo "📦 STEP 2: Add Facebook SDK via Xcode"
+echo "────────────────────────────────────────"
+echo ""
+echo "1. In Xcode menu: File → Add Package Dependencies..."
+echo "2. Paste this URL:"
+echo "   https://github.com/facebook/facebook-ios-sdk"
+echo ""
+echo "3. Set 'Dependency Rule' to: 'Up to Next Major Version' (17.0.0)"
+echo "4. Click 'Add Package'"
+echo ""
+echo "5. When prompted, SELECT these products:"
+echo "   ✅ FacebookLogin"
+echo "   ✅ FacebookCore"
+echo ""
+echo "6. Click 'Add Package'"
+echo ""
+read -p "Press ENTER when you've completed Step 2..."
+
+echo ""
+echo "✅ SDKs should now be installed!"
+echo ""
+echo "📝 NEXT STEPS:"
+echo "────────────────────────────────────────"
+echo "1. Make sure GoogleService-Info.plist is in your project"
+echo "2. Build the project (Cmd+B)"
+echo "3. Tell the agent: 'SDKs installed successfully'"
+echo ""
+echo "The agent will then:"
+echo "  - Initialize Firebase in AppDelegate"
+echo "  - Configure Facebook Login"
+echo "  - Activate CloudSyncManager"
+echo "  - Test the integration"
+echo ""
+echo "🚀 You're almost there!"

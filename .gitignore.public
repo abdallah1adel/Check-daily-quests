@@ -1,0 +1,72 @@
+# Xcode
+.DS_Store
+*.xcuserstate
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Swift Package Manager
+.swiftpm/
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods (if used)
+Pods/
+Podfile.lock
+
+# Sensitive Files - Protocol 22
+GoogleService-Info.plist
+**/Protocol22*.swift
+**/GodBrain.swift
+**/BiometricManager.swift
+**/VisionFaceDetector.swift
+**/CloudSyncManager.swift
+**/FacebookAuthManager.swift
+
+# API Keys & Secrets
+.env
+*.plist
+*_SECRET*
+*_KEY*
+
+# CoreML Models (Large files)
+*.mlpackage/
+*.mlmodel
+
+# Python
+scripts/venv/
+scripts/__pycache__/
+*.pyc
+*.egg-info/
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# User-specific files
+*.swp
+*~
+.vscode/
+.idea/
+
+# Sensitive documents
+FIREBASE_SETUP.md
+FACEBOOK_SETUP.md
+SDK_INSTALLATION.md
+LAUNCH_PROTOCOL.md

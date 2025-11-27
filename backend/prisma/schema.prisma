@@ -1,0 +1,226 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"] // Enable pgvector support if needed later
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Identity & Sovereignty
+model User {
+  id            String    @id @default(uuid())
+  did           String    @unique // Decentralized Identity
+  username      String?   @unique
+  email         String?   @unique
+  passwordHash  String?
+  createdAt     DateTime  @default(now())
+  settings      Json?     @default("{}")
+  
+  devices       Device[]
+  wallets       Wallet[]
+  memories      Memory[]
+  entities      Entity[]
+  goals         Goal[]
+  personality   PersonalityState[]
+  assets        Asset[]
+  sensoryLogs   SensoryLog[]
+  
+  // Referral System
+  referralCode      ReferralCode?
+  referralsGiven    Referral[]         @relation("ReferrerRelation")
+  referralsReceived Referral[]         @relation("RefereeRelation")
+  promoRedemptions  PromoRedemption[]
+  hasReferralDiscount Boolean          @default(false)
+}
+
+model Device {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceHash  String
+  deviceName  String?
+  deviceType  String?   // 'mobile', 'desktop', 'wearable'
+  lastSeen    DateTime?
+  publicKey   String    // For E2EE
+}
+
+model Wallet {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chainId     Int
+  address     String
+  label       String?
+  isPrimary   Boolean   @default(false)
+  // Private keys are NEVER stored here
+}
+
+// 2. The Cortex (Memory)
+model Memory {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content         String    @db.Text
+  memoryType      String    // 'episodic', 'semantic', 'procedural'
+  sourceType      String    // 'chat', 'voice', 'observation'
+  sourceId        String?
+  importance      Float     @default(0.5)
+  emotionalContext Json?
+  createdAt       DateTime  @default(now())
+  validUntil      DateTime?
+  privacyLevel    String    @default("private")
+
+  embeddings      MemoryEmbedding[]
+}
+
+model MemoryEmbedding {
+  memoryId      String
+  memory        Memory    @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  modelVersion  String
+  embedding     Unsupported("vector(1536)")? // Requires pgvector extension in DB
+
+  @@id([memoryId, modelVersion])
+}
+
+// 3. Knowledge Graph
+model Entity {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  entityType    String    // 'person', 'place', 'concept'
+  description   String?   @db.Text
+  metadata      Json?
+
+  outgoingEdges Relationship[] @relation("SourceEntity")
+  incomingEdges Relationship[] @relation("TargetEntity")
+}
+
+model Relationship {
+  id              String    @id @default(uuid())
+  sourceEntityId  String
+  sourceEntity    Entity    @relation("SourceEntity", fields: [sourceEntityId], references: [id], onDelete: Cascade)
+  targetEntityId  String
+  targetEntity    Entity    @relation("TargetEntity", fields: [targetEntityId], references: [id], onDelete: Cascade)
+  relationType    String
+  strength        Float     @default(1.0)
+  createdAt       DateTime  @default(now())
+}
+
+// 4. Agency & Goals
+model Goal {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?   @db.Text
+  status      String    @default("active")
+  priority    Int       @default(1)
+  deadline    DateTime?
+  progress    Float     @default(0.0)
+  
+  tasks       Task[]
+}
+
+model Task {
+  id            String    @id @default(uuid())
+  goalId        String
+  goal          Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title         String
+  status        String    @default("pending")
+  assignedAgent String?
+  resultData    Json?
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+}
+
+// 5. Evolution
+model PersonalityState {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timestamp   DateTime  @default(now())
+  traits      Json?
+  moodBaseline Json?
+}
+
+// 6. Multi-Modal
+model Asset {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filePath        String
+  mimeType        String?
+  sizeBytes       BigInt?
+  isEncrypted     Boolean   @default(true)
+  
+  sensoryLogs     SensoryLog[]
+}
+
+model SensoryLog {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logType     String    // 'voice', 'camera'
+  assetId     String?
+  asset       Asset?    @relation(fields: [assetId], references: [id])
+  transcription String? @db.Text
+  createdAt   DateTime  @default(now())
+}
+
+// 7. Referral System
+model ReferralCode {
+  id          String     @id @default(uuid())
+  userId      String     @unique
+  code        String     @unique // e.g., "PCPOS-ABC123"
+  usesCount   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referrals   Referral[]
+}
+
+model Referral {
+  id              String       @id @default(uuid())
+  referrerId      String       // User who shared the code
+  refereeId       String       @unique // User who used the code
+  codeUsed        String
+  discountApplied Boolean      @default(false)
+  active          Boolean      @default(true) // True while referee is subscribed
+  createdAt       DateTime     @default(now())
+  
+  referralCode    ReferralCode @relation(fields: [codeUsed], references: [code])
+  referrer        User         @relation("ReferrerRelation", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee         User         @relation("RefereeRelation", fields: [refereeId], references: [id], onDelete: Cascade)
+}
+
+model PromoCode {
+  id            String            @id @default(uuid())
+  code          String            @unique
+  type          String            // "PERCENTAGE" or "FIXED"
+  discountValue Float             // 10 for 10%, or 7.99 for $7.99
+  active        Boolean           @default(true)
+  usesCount     Int               @default(0)
+  maxUses       Int?              // null = unlimited
+  expiresAt     DateTime?
+  createdAt     DateTime          @default(now())
+  
+  redemptions   PromoRedemption[]
+}
+
+model PromoRedemption {
+  id          String    @id @default(uuid())
+  userId      String
+  promoCodeId String
+  codeUsed    String
+  redeemedAt  DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+}
+

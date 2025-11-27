@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCPOS - Data Deletion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #f5576c;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: #f093fb;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ol,
+        ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .method-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #f093fb;
+        }
+
+        .important {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Data Deletion Request</h1>
+        <p>If you used Facebook Login with PCPOS Companion and want to delete your data, follow the instructions below.
+        </p>
+
+        <div class="method-box">
+            <h2>Method 1: In-App Deletion (Recommended)</h2>
+            <ol>
+                <li>Open <strong>PCPOS Companion</strong> app</li>
+                <li>Go to <strong>Profile</strong></li>
+                <li>Scroll to bottom and tap <strong>"Delete Account"</strong></li>
+                <li>Confirm deletion</li>
+                <li>Your account and all associated data will be permanently deleted within 30 days</li>
+            </ol>
+        </div>
+
+        <div class="method-box">
+            <h2>Method 2: Email Request</h2>
+            <p>If you don't have access to the app, send an email to:</p>
+            <p><strong>Email:</strong> privacy@pcpos.app</p>
+            <p><strong>Subject:</strong> "Data Deletion Request"</p>
+            <p><strong>Include:</strong> Your email address or Facebook ID</p>
+            <p>We will respond within 48 hours and process your request within 30 days.</p>
+        </div>
+
+        <h2>What Gets Deleted</h2>
+        <div class="success-box">
+            <p>When you delete your account, we permanently remove:</p>
+            <ul>
+                <li>✅ Your profile information (name, email, photo)</li>
+                <li>✅ All biometric data (face and voice embeddings)</li>
+                <li>✅ Social media connections (Facebook, Instagram)</li>
+                <li>✅ Usage history and preferences</li>
+                <li>✅ All cloud-stored data in Firebase</li>
+            </ul>
+        </div>
+
+        <h2>Deletion Timeline</h2>
+        <ul>
+            <li><strong>Immediate:</strong> Your account is deactivated</li>
+            <li><strong>Within 7 days:</strong> All personal data is deleted from active databases</li>
+            <li><strong>Within 30 days:</strong> All backups and logs are purged</li>
+        </ul>
+
+        <div class="important">
+            <h3>⚠️ Important</h3>
+            <p>Data deletion is <strong>permanent and irreversible</strong>. You will not be able to recover your
+                account or data after deletion is complete.</p>
+        </div>
+
+        <h2>Verification</h2>
+        <p>After deletion, you will:</p>
+        <ul>
+            <li>No longer be able to log in</li>
+            <li>Receive a confirmation email at your registered address</li>
+            <li>Have all data removed from our systems</li>
+        </ul>
+
+        <div class="footer">
+            <p>Need help? Contact us at <a href="mailto:privacy@pcpos.app">privacy@pcpos.app</a></p>
+            <p style="margin-top: 20px;">&copy; 2025 PCPOS Companion. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>

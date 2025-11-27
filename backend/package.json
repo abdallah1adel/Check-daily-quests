@@ -1,0 +1,35 @@
+{
+    "name": "pcpos-companion-backend",
+    "version": "1.0.0",
+    "description": "PCPOS Companion Backend API with referral system",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "ts-node src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "migrate": "npx prisma migrate deploy",
+        "generate": "npx prisma generate",
+        "postinstall": "prisma generate"
+    },
+    "keywords": [
+        "api",
+        "referral",
+        "companion"
+    ],
+    "author": "PCPOS",
+    "license": "MIT",
+    "dependencies": {
+        "@prisma/client": "^5.0.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.0",
+        "express": "^4.18.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.13",
+        "@types/express": "^4.17.17",
+        "@types/node": "^20.0.0",
+        "prisma": "^5.0.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.0.0"
+    }
+}
