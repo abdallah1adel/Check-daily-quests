@@ -31,13 +31,31 @@ GoogleService-Info.plist
 
 # API Keys & Secrets
 .env
+.env.*
 *.plist
 *_SECRET*
 *_KEY*
+**/Secrets.xcconfig
+**/secrets.xcconfig
+**/*Secret*.xcconfig
 
 # CoreML Models (Large files)
 *.mlpackage/
 *.mlmodel
+
+# ML Model files (Large files - should not be in repo)
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.onnx
+*.tflite
+**/models/llm/
+**/models/**/*.safetensors
+**/models/**/*.gguf
 
 # Python
 scripts/venv/
@@ -65,8 +83,40 @@ temp/
 .vscode/
 .idea/
 
+# Backup files
+*.backup
+*~
+*.bak
+*.orig
+
 # Sensitive documents
 FIREBASE_SETUP.md
 FACEBOOK_SETUP.md
 SDK_INSTALLATION.md
 LAUNCH_PROTOCOL.md
+
+# Large asset directories (SF Symbols)
+SYMBOLS/
+
+# Backend assets (images, SVGs)
+backend/*.svg
+backend/*.png
+backend/*.jpg
+backend/*.jpeg
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/dev.db*
+
+# Build artifacts
+dist/
+*.tsbuildinfo
+
+# Prisma
+prisma/migrations/
