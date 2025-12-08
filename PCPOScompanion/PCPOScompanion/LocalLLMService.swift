@@ -1,4 +1,5 @@
 import Foundation
+import CoreML
 import Combine
 
 // MARK: - Local LLM Response Types
@@ -78,62 +79,33 @@ class LocalLLMService: ObservableObject {
     }
     
     private func loadGGUFModel() async -> Bool {
-        print("LocalLLMService: [Transformers] Looking for Granite model...")
-
-        // Check if transformers model files exist (safetensors format)
-        let modelDirURL = Bundle.main.bundleURL.appendingPathComponent("Resources/models/llm")
-        let fileManager = FileManager.default
-
-        do {
-            let contents = try fileManager.contentsOfDirectory(at: modelDirURL, includingPropertiesForKeys: nil)
-            let hasModelFiles = contents.contains { url in
-                url.lastPathComponent.hasSuffix(".safetensors") ||
-                url.lastPathComponent.hasSuffix(".bin") ||
-                url.lastPathComponent.hasSuffix(".pt") ||
-                url.lastPathComponent == "config.json"
-            }
-
-            if hasModelFiles {
-                print("LocalLLMService: [Transformers] Found model files:")
-                contents.filter { $0.lastPathComponent.hasSuffix(".safetensors") ||
-                                $0.lastPathComponent.hasSuffix(".bin") ||
-                                $0.lastPathComponent == "config.json" }.forEach { url in
-                    print("  - \(url.lastPathComponent)")
-                }
-
-                // TODO: Integrate transformers Swift bindings
-                // For now, mark as loaded for fallback responses with enhanced logic
-                self.currentMode = "Transformers"
-                self.isModelLoaded = true
-                print("LocalLLMService: ✅ Transformers model files found (ready for integration)")
-                return true
-            } else {
-                print("LocalLLMService: [Transformers] Model files not found in \(modelDirURL.path)")
-                print("Available files: \(contents.map { $0.lastPathComponent })")
-                return false
-            }
-        } catch {
-            print("LocalLLMService: [Transformers] Error checking model directory: \(error)")
-            return false
-        }
+        // Model files removed - using fallback mode only
+        print("LocalLLMService: [Transformers] Model files not available - using fallback")
+        return false
     }
     
     private func loadCoreMLModel() async -> Bool {
         print("LocalLLMService: [CoreML] Looking for CoreML model...")
         
-        // Locate CoreML model in bundle
-        guard let modelURL = Bundle.main.url(forResource: "GraniteModel", withExtension: "mlmodelc", subdirectory: "Resources/models/llm") else {
-            print("LocalLLMService: [CoreML] Model not found in bundle")
+        // Look for Llama3_1B model - Xcode compiles .mlpackage -> .mlmodelc at build time
+        // The model is at bundle root, not in a subdirectory
+        guard let modelURL = Bundle.main.url(forResource: "Llama3_1B", withExtension: "mlmodelc") else {
+            print("LocalLLMService: [CoreML] Llama3_1B.mlmodelc not found in bundle")
+            
+            // Try alternative models
+            if let bertURL = Bundle.main.url(forResource: "BERTSQUADFP16", withExtension: "mlmodelc") {
+                print("LocalLLMService: [CoreML] Found BERTSQUADFP16 at \(bertURL.path)")
+                // Could use BERT for Q&A instead
+            }
             return false
         }
         
-        print("LocalLLMService: [CoreML] Found model at \(modelURL.path)")
+        print("LocalLLMService: [CoreML] Found Llama3_1B at \(modelURL.path)")
         
-        // TODO: Load CoreML model
-        /*
+        // Load the model
         do {
             let config = MLModelConfiguration()
-            config.computeUnits = .all
+            config.computeUnits = .cpuAndGPU
             let mlModel = try MLModel(contentsOf: modelURL, configuration: config)
             self.model = mlModel
             self.currentMode = "CoreML"
@@ -144,10 +116,6 @@ class LocalLLMService: ObservableObject {
             print("LocalLLMService: [CoreML] Failed to load - \(error)")
             return false
         }
-        */
-        
-        print("LocalLLMService: [CoreML] Model integration pending")
-        return false
     }
     
     // MARK: - Inference

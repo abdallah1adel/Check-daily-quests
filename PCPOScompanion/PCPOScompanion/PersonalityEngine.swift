@@ -132,7 +132,7 @@ class PersonalityEngine: ObservableObject {
         let energyMultiplier = Float(currentMoodState.energy.rawValue) / 8.0 // 0.0 to 2.0
         
         // Update animation speed based on energy
-        animationParams.speed = 0.5 + (energyMultiplier * 0.5)
+        animationParams.speed = CGFloat(0.5 + (energyMultiplier * 0.5))
         
         // Update color based on emotion
         animationParams.primaryColor = colorForEmotion(currentMoodState.primary)
@@ -282,8 +282,8 @@ class PersonalityEngine: ObservableObject {
     }
     
     // Speaking State
-    var isSpeaking: Bool = false
-    var audioLevel: Float = 0.0
+    @Published var isSpeaking: Bool = false
+    @Published var audioLevel: Float = 0.0
     
     // Emotion Override (from Chat)
     var emotionOverride: EmotionPulse?
@@ -411,58 +411,41 @@ class PersonalityEngine: ObservableObject {
         return a + (b - a) * t
     }
     
-    // MARK: - Live Activity Management
+    // MARK: - Live Activity Management (DISABLED - Handled by LiveActivityManager)
     
     private var activity: Activity<AvatarAttributes>?
     private var lastActivityUpdate: Date = Date()
     
     func startActivity() {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        
-        let attributes = AvatarAttributes(companionName: companionName)
-        let contentState = AvatarAttributes.ContentState(
-            eyeOpen: animationParams.eyeOpen,
-            mouthOpen: animationParams.mouthOpen,
-            smile: animationParams.mouthSmile,
-            browRaise: animationParams.browRaise,
-            headTilt: animationParams.headTilt,
-            glow: animationParams.glow,
-            hue: 0.55 // Approximate
-        )
-        
-        do {
-            activity = try Activity.request(attributes: attributes, contentState: contentState, pushType: nil)
-        } catch {
-            print("Error starting activity: \(error)")
-        }
+        // Disabled to avoid conflict with PCPOSLiveActivity (House)
+        // LiveActivityManager.shared.startActivity(...)
     }
     
     func updateActivity() {
-        guard let activity = activity else { return }
-        
-        // Throttle updates to avoid system limits (e.g. max 1 per second usually, but we'll try 0.5s)
-        guard Date().timeIntervalSince(lastActivityUpdate) > 0.5 else { return }
-        lastActivityUpdate = Date()
-        
-        let contentState = AvatarAttributes.ContentState(
-            eyeOpen: animationParams.eyeOpen,
-            mouthOpen: animationParams.mouthOpen,
-            smile: animationParams.mouthSmile,
-            browRaise: animationParams.browRaise,
-            headTilt: animationParams.headTilt,
-            glow: animationParams.glow,
-            hue: 0.55 // We could calculate this from colorTint if we had the logic here
-        )
-        
-        Task {
-            await activity.update(using: contentState)
-        }
+        // Disabled
     }
     
     func endActivity() {
-        Task {
-            await activity?.end(dismissalPolicy: .immediate)
-            activity = nil
+        // Disabled
+    }
+    
+    // MARK: - Emotion Sync
+    
+    func updateEmotion(from state: EmotionState) {
+        setEmotionOverride(tag: state.rawValue)
+        
+        // Also update PAD state directly based on EmotionState
+        switch state {
+        case .happy: targetPAD = .happy
+        case .sad: targetPAD = .sad
+        case .angry: targetPAD = .angry
+        case .excited: targetPAD = .excited
+        case .calm: targetPAD = .relaxed
+        case .surprised: targetPAD = .surprised
+        case .heroic: targetPAD = .heroic
+        case .curious: targetPAD = .curious // Map to interest/curiosity
+        case .love: targetPAD = .happy // Saturated happy
+        default: targetPAD = .neutral
         }
     }
     

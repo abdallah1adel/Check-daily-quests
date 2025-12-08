@@ -100,7 +100,8 @@ struct NextGenPCPOSFace: View {
             }
             .font(.system(size: size * 0.12))
             .foregroundStyle(Color(hex: faceModel.profile.appearance.colors.primary))
-            .symbolEffect(.scale, value: isBlinking)
+            .scaleEffect(isBlinking ? 0.7 : 1.0)  // Use scaleEffect instead of symbolEffect(.scale)
+            .animation(.easeInOut(duration: 0.2), value: isBlinking)
             .offset(y: -size * 0.05)
             
             // Nose (SF Symbol)

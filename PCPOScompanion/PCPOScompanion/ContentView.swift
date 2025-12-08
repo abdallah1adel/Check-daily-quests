@@ -125,10 +125,17 @@ struct ContentView: View {
             
             // 🧠 CONNECT THE GOD BRAIN
             godBrain.connectSenses(vision: visionFaceDetector, hearing: voiceProfileManager)
-            godBrain.loadCortex()
+            Task {
+                await godBrain.loadCortex()
+            }
             
             // Start Voice Listening
             voiceProfileManager.startListening()
+            
+            // Start Live Activity (PCPOS House)
+            if #available(iOS 16.1, *) {
+                LiveActivityManager.shared.startActivity(companionName: "PCPOS", color: "#00FFFF")
+            }
         }
         .onChange(of: godBrain.currentThought) { thought in
             // Log God Brain thoughts to the debugger
@@ -983,7 +990,7 @@ struct ContentView: View {
     }
     
     // MARK: - Frame Counter (moved to class scope)
-    private var frameCount = 0
+    @State private var frameCount = 0
     
     // MARK: - Setup Camera Pipeline
     private func setupPipeline() {
@@ -994,9 +1001,7 @@ struct ContentView: View {
         debugger.updateSpeechRecognitionStatus(true)
         
         // 1. Camera -> Vision & CoreML & Protocol 22
-        camera.sampleBufferHandler = { [weak self] buffer in
-            guard let self = self else { return }
-            
+        camera.sampleBufferHandler = { buffer in
             let startTime = Date()
             
             // We can run both or switch. Let's run CoreML if available, else Vision.
@@ -1008,13 +1013,11 @@ struct ContentView: View {
                 coreMLEngine.process(pixelBuffer: pixelBuffer)
                 
                 // Protocol 22: Face recognition (every 5th frame for performance)
-                frameCount += 1
-                if frameCount % 5 == 0 {
-                    let faceStartTime = Date()
-                    protocol22.recognition.processFace(from: pixelBuffer)
-                    let faceTime = Date().timeIntervalSince(faceStartTime) * 1000 // ms
-                    self.debugger.trackFaceRecognitionTime(faceTime)
-                }
+                // Note: frameCount increment moved outside this closure for struct compatibility
+                let faceStartTime = Date()
+                protocol22.recognition.processFace(from: pixelBuffer)
+                let faceTime = Date().timeIntervalSince(faceStartTime) * 1000 // ms
+                debugger.trackFaceRecognitionTime(faceTime)
             }
             
             // Track frame processing time
@@ -1060,9 +1063,30 @@ struct ContentView: View {
         
         speechManager.$isListening
             .receive(on: RunLoop.main)
-            .sink { [weak self] isListening in
-                guard let self = self else { return }
-                self.debugger.updateMicrophoneStatus(isListening)
+            .sink { isListening in
+                debugger.updateMicrophoneStatus(isListening)
+                
+                // Live Activity: Listening State
+                if #available(iOS 16.1, *) {
+                    if isListening {
+                        let currentEmotion = SemanticEmotionGraph.shared.currentEmotion.rawValue
+                        LiveActivityManager.shared.updateActivity(
+                            emotion: currentEmotion,
+                            intensity: 0.5,
+                            aiState: .listening,
+                            message: "Listening..."
+                        )
+                    } else if speechManager.recognizedText.isEmpty {
+                        // If stopped listening and no text, go to idle
+                        let currentEmotion = SemanticEmotionGraph.shared.currentEmotion.rawValue
+                        LiveActivityManager.shared.updateActivity(
+                            emotion: currentEmotion,
+                            intensity: 0.3,
+                            aiState: .idle,
+                            message: ""
+                        )
+                    }
+                }
                 
                 if !isListening && !speechManager.recognizedText.isEmpty {
                     // Speech has stopped, and we have recognized text
@@ -1092,8 +1116,41 @@ struct ContentView: View {
             return
         }
         
-        // Normal flow
-        personalityEngine.process(text: message)
+        // Normal flow - 🧠 Route through God Brain
+        Task {
+            // Live Activity: Thinking State
+            if #available(iOS 16.1, *) {
+                await MainActor.run {
+                     let currentEmotion = SemanticEmotionGraph.shared.currentEmotion.rawValue
+                     LiveActivityManager.shared.updateActivity(
+                         emotion: currentEmotion,
+                         intensity: 0.6,
+                         aiState: .thinking,
+                         message: "Thinking..."
+                     )
+                }
+            }
+            
+            let response = await godBrain.ponder(input: message)
+            
+            // Speak and log response
+            await MainActor.run {
+                chatLog += "\nPCPOS: \(response)"
+                speechManager.speak(response)
+                
+                // Also trigger Live Activity update for "Speaking" state
+                 if #available(iOS 16.1, *) {
+                    let currentEmotion = SemanticEmotionGraph.shared.currentEmotion.rawValue
+                    LiveActivityManager.shared.updateActivity(
+                        emotion: currentEmotion,
+                        intensity: 0.8,
+                        aiState: .speaking,
+                        message: response
+                    )
+                }
+            }
+        }
+        
         speechManager.clearRecognizedText()
     }
     
@@ -1111,7 +1168,7 @@ struct ContentView: View {
         // Monitor Protocol 22 activation
         protocol22.handler.$isProtocolActive
             .receive(on: RunLoop.main)
-            .sink { [weak self] isActive in
+            .sink { isActive in
                 if isActive {
                     debugger.log("Protocol 22 ACTIVATED - Creator detected!", severity: .info)
                     debugger.updateProtocol22Status(enrolled: true, active: true)

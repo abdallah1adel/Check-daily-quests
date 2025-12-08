@@ -10,5 +10,8 @@ import Foundation
 struct Config {
     /// ⚠️  DEPRECATED: Use SecureConfig.shared.openAIAPIKey instead
     /// OpenAI API Key for Pro features
-    static let openAIAPIKey = "your_openai_api_key_here" // Replace with actual key or use environment variables
+    static let openAIAPIKey = ""
+    
+    /// HuggingFace Token for model downloads
+    static let huggingFaceToken = ""
 }

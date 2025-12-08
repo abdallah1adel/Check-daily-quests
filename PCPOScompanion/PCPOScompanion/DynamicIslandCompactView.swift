@@ -1,5 +1,6 @@
 import SwiftUI
 import ActivityKit
+import Combine
 
 // MARK: - Dynamic Island Compact View (44×44pt Square)
 
@@ -37,13 +38,12 @@ struct DynamicIslandCompactView: View {
                 
                 // Mouth (simple line)
                 mouthShape
-                    .stroke(emotionColor, lineWidth: 1.5)
                     .frame(width: 12, height: 4)
             }
             .offset(y: -2)
             
-            // Speaking indicator (waveform pulse)
-            if speechManager.isSpeaking {
+            // Speaking/Listening indicator (waveform pulse)
+            if speechManager.isSpeaking || speechManager.isListening {
                 Circle()
                     .fill(emotionColor.opacity(0.3))
                     .frame(width: size, height: size)
@@ -71,11 +71,12 @@ struct DynamicIslandCompactView: View {
         let openAmount = CGFloat(speechManager.audioLevel)
         
         if openAmount > 0.2 {
-            // Open (talking)
+            // Open (talking) - use stroke on ellipse
             Ellipse()
+                .stroke(emotionColor, lineWidth: 1.5)
                 .frame(width: 8, height: 3 * (0.5 + openAmount))
         } else {
-            // Smile/frown
+            // Smile/frown - use stroke on path
             Path { path in
                 let width: CGFloat = 12
                 let curvature = smile * 2
@@ -85,6 +86,7 @@ struct DynamicIslandCompactView: View {
                     control: CGPoint(x: width/2, y: curvature)
                 )
             }
+            .stroke(emotionColor, lineWidth: 1.5)
         }
     }
 }
@@ -106,7 +108,8 @@ struct PCPOSFaceActivityAttributes: ActivityAttributes {
 // MARK: - Live Activity Manager
 
 @available(iOS 16.1, *)
-class LiveActivityManager: ObservableObject {
+@available(iOS 16.1, *)
+class CompactLiveActivityManager: ObservableObject {
     @Published var currentActivity: Activity<PCPOSFaceActivityAttributes>?
     
     func startActivity(emotion: String) {

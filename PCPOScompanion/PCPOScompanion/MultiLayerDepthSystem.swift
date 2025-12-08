@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 // MARK: - 5-Layer Rotation Depth System
 
@@ -99,8 +100,8 @@ struct MultiLayerDepthSystem {
                 let angle = Double.random(in: 0...(2 * .pi))
                 let distance = CGFloat.random(in: 20...60)
                 let offset = CGSize(
-                    width: cos(angle) * distance,
-                    height: sin(angle) * distance
+                    width: CGFloat(cos(angle)) * distance,
+                    height: CGFloat(sin(angle)) * distance
                 )
                 
                 symbols.append(LayeredSymbol(

@@ -97,4 +97,16 @@ class KeychainManager {
             throw KeychainError.unexpectedStatus(status)
         }
     }
+    
+    // MARK: - Convenience Methods
+    
+    /// Convenience method using key-based access (maps to service/account)
+    func load(key: String) -> Data? {
+        return read(service: serviceName, account: key)
+    }
+    
+    /// Convenience method to save using key
+    func save(_ data: Data, forKey key: String) throws {
+        try save(data, service: serviceName, account: key)
+    }
 }

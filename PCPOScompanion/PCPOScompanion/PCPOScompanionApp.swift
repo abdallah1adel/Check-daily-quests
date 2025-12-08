@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseCore
 
 /// 🎯 Main App Entry Point with Tab Navigation
 @main
@@ -10,6 +11,9 @@ struct PCPOScompanionApp: App {
     @Environment(\.scenePhase) private var scenePhase
     
     init() {
+        // Configure Firebase
+        FirebaseApp.configure()
+        
         // Start local AI servers
         PythonBridge.shared.startServers()
     }

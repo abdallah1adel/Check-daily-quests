@@ -27,7 +27,7 @@ class SpeechManager: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AVS
     @Published var currentProvider: TTSProvider = .apple
     @Published var apiKey: String = ""
     
-    private let elevenLabsService = ElevenLabsService()
+    // ElevenLabs REMOVED - using Apple TTS and OpenAI only
     private let openAIService = OpenAITTSService()
     
     override init() {
@@ -189,9 +189,8 @@ class SpeechManager: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AVS
     func speak(_ text: String) {
         PCPOSHaptics.shared.playSpeakingStart()
         
-        // Check provider
-        // We allow empty API key here because speakExternal handles the system key fallback for OpenAI
-        if currentProvider != .apple {
+        // Check provider - default to Apple TTS
+        if currentProvider == .openAI {
             speakExternal(text: text)
         } else {
             speakApple(text: text)
@@ -199,15 +198,12 @@ class SpeechManager: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AVS
     }
     
     private func speakExternal(text: String) {
-        let service: TTSServiceProtocol
-        let voiceId: String? = nil // Use default for now, or map from settings
+        let voiceId: String? = nil // Use default for now
         
         // Determine API Key
         var effectiveApiKey = apiKey
         if effectiveApiKey.isEmpty {
-            if currentProvider == .openAI {
-                effectiveApiKey = SecureConfig.shared.openAIAPIKey ?? ""
-            }
+            effectiveApiKey = SecureConfig.shared.openAIAPIKey ?? ""
         }
         
         // If still empty, fallback
@@ -218,11 +214,25 @@ class SpeechManager: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AVS
         }
         
         switch currentProvider {
-        case .elevenLabs:
-            service = elevenLabsService
         case .openAI:
-            service = openAIService
-        case .xtts: // NEW: Local XTTS
+            print("SpeechManager: Requesting external TTS from OpenAI...")
+            DispatchQueue.main.async { self.isSpeaking = true }
+            
+            openAIService.generateAudio(text: text, voiceId: voiceId, apiKey: effectiveApiKey) { [weak self] result in
+                guard let self = self else { return }
+                
+                switch result {
+                case .success(let data):
+                    print("SpeechManager: Received audio data (\(data.count) bytes). Playing...")
+                    self.playAudio(data: data)
+                case .failure(let error):
+                    print("SpeechManager: External TTS Error: \(error). Falling back to Apple TTS.")
+                    DispatchQueue.main.async {
+                        self.speakApple(text: text)
+                    }
+                }
+            }
+        case .xtts: // Local XTTS
             print("SpeechManager: Requesting local XTTS...")
             DispatchQueue.main.async { self.isSpeaking = true }
             
@@ -236,29 +246,8 @@ class SpeechManager: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AVS
                     DispatchQueue.main.async { self.speakApple(text: text) }
                 }
             }
-            return
         default:
             speakApple(text: text)
-            return
-        }
-        
-        print("SpeechManager: Requesting external TTS from \(currentProvider)...")
-        DispatchQueue.main.async { self.isSpeaking = true }
-        
-        service.generateAudio(text: text, voiceId: voiceId, apiKey: effectiveApiKey) { [weak self] result in
-            guard let self = self else { return }
-            
-            switch result {
-            case .success(let data):
-                print("SpeechManager: Received audio data (\(data.count) bytes). Playing...")
-                self.playAudio(data: data)
-            case .failure(let error):
-                print("SpeechManager: External TTS Error: \(error). Falling back to Apple TTS.")
-                // Fallback to Apple
-                DispatchQueue.main.async {
-                    self.speakApple(text: text)
-                }
-            }
         }
     }
     

@@ -43,8 +43,8 @@ class AppDebugger: ObservableObject {
         let message: String
         let severity: Severity
         
-        enum Severity {
-            case info, warning, error, critical
+        enum Severity: String {
+            case info, warning, error, critical, success
         }
     }
     
@@ -249,6 +249,7 @@ struct DebugView: View {
         case .warning: return .orange
         case .error: return .red
         case .critical: return .purple
+        case .success: return .green
         }
     }
 }

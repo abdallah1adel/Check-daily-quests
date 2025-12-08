@@ -92,7 +92,7 @@ struct Disney12Principles {
         
         struct Keyframe {
             var position: Int
-            var value: AnimatableData
+            var value: CGFloat  // Animation value at this keyframe
             var easing: EasingFunction
         }
     }
@@ -187,12 +187,12 @@ struct Disney12Principles {
                 return t < 0.5 ? (pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2 :
                     (pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2
             case .easeInElastic:
-                let c4 = (2 * .pi) / 3
+                let c4 = (2 * Double.pi) / 3
                 if t == 0 { return 0 }
                 if t == 1 { return 1 }
                 return -pow(2, 10 * t - 10) * sin((t * 10 - 10.75) * c4)
             case .easeOutElastic:
-                let c4 = (2 * .pi) / 3
+                let c4 = (2 * Double.pi) / 3
                 if t == 0 { return 0 }
                 if t == 1 { return 1 }
                 return pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1

@@ -32,19 +32,34 @@ final class VisionEmotionEngine: ObservableObject {
     }
 
     private func setupCoreML() {
-        // Attempt to load 'EmotionNet' from bundle
-        // User must add EmotionNet.mlmodel to the project
-        if let modelURL = Bundle.main.url(forResource: "EmotionNet", withExtension: "mlmodelc") {
+        // Try to load vision models from bundle
+        // Models available: DeepLabV3, FastViTMA36F16, DETRResnet50SemanticSegmentationF16, DepthAnythingV2SmallF16
+        
+        // First try FastViT for fast image classification
+        if let modelURL = Bundle.main.url(forResource: "FastViTMA36F16", withExtension: "mlmodelc") {
             do {
                 let model = try VNCoreMLModel(for: MLModel(contentsOf: modelURL))
                 self.emotionModel = model
-                print("VisionEmotionEngine: CoreML Model Loaded")
+                print("VisionEmotionEngine: ✅ Loaded FastViTMA36F16 CoreML Model")
+                return
             } catch {
-                print("VisionEmotionEngine: Failed to load CoreML model - \(error)")
+                print("VisionEmotionEngine: FastViT load failed - \(error)")
             }
-        } else {
-            print("VisionEmotionEngine: EmotionNet.mlmodelc not found in bundle.")
         }
+        
+        // Fallback to DeepLabV3 for segmentation
+        if let modelURL = Bundle.main.url(forResource: "DeepLabV3", withExtension: "mlmodelc") {
+            do {
+                let model = try VNCoreMLModel(for: MLModel(contentsOf: modelURL))
+                self.emotionModel = model
+                print("VisionEmotionEngine: ✅ Loaded DeepLabV3 CoreML Model")
+                return
+            } catch {
+                print("VisionEmotionEngine: DeepLabV3 load failed - \(error)")
+            }
+        }
+        
+        print("VisionEmotionEngine: ⚠️ No vision models loaded - using Vision framework only")
     }
 
     func process(sampleBuffer: CMSampleBuffer) {

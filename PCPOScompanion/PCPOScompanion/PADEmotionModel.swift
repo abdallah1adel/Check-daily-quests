@@ -23,6 +23,10 @@ struct PADEmotion: Codable, Equatable {
     static let bored = PADEmotion(pleasure: -0.3, arousal: -0.6, dominance: -0.1)
     static let excited = PADEmotion(pleasure: 0.9, arousal: 0.9, dominance: 0.4)
     static let relaxed = PADEmotion(pleasure: 0.7, arousal: -0.5, dominance: 0.3)
+    
+    // PCPOS Specific
+    static let heroic = PADEmotion(pleasure: 0.8, arousal: 0.9, dominance: 0.9) // High everything
+    static let curious = PADEmotion(pleasure: 0.6, arousal: 0.7, dominance: 0.1) // Neutral dominance, high arousal
 }
 
 // MARK: - Emotion Mapper

@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 /// Refined PCPOS Face ID Style with Full SF Symbols Integration
 /// Unleashing the complete power of SF Symbols for expressive communication
@@ -131,7 +132,7 @@ struct RefinedPCPOSFaceIDView: View {
                         emotionIntensity: emotionIntensity,
                         mouthSmile: faceModel.profile.geometry.mouth.smile,
                         eyeSquint: faceModel.profile.geometry.eyeLeft.squint,
-                        audioLevel: speechManager.audioLevel,
+                        audioLevel: Double(speechManager.audioLevel),
                         isSpeaking: speechManager.isSpeaking
                     )
                     
@@ -187,7 +188,7 @@ struct RefinedPCPOSFaceIDView: View {
                 noseWiggle = .degrees(smile * 3)
             }
         }
-        .onReceive(faceModel.$geometry) { geometry in
+        .onChange(of: faceModel.profile.geometry.mouth.smile) { _ in
             // Update emotion based on face model
             updateCurrentEmotion()
         }
@@ -408,9 +409,9 @@ struct RefinedPCPOSFaceIDView: View {
                 isActive: currentEmotion == "CONFUSED" || currentEmotion == "THINKING"
             )
             .symbolEffect(
-                wiggleEffectForMood(),
+                .wiggle.byLayer,
                 options: .repeat(.periodic(delay: emotionWiggleDelay())),
-                isActive: intensity > 0.3
+                isActive: emotionIntensity > 0.3
             )
             
             // MARK: Pulse Effect (Emphasis)
@@ -531,9 +532,8 @@ struct RefinedPCPOSFaceIDView: View {
     
     // MARK: - Dynamic Animation Selection
     
-    private func wiggleEffectForMood() -> some SymbolEffect {
-        let angle = wiggleAngleForMood()
-        return .wiggle.custom(angle: angle).byLayer
+    private func wiggleEffectForMood() -> WiggleSymbolEffect {
+        return .wiggle.byLayer
     }
     
     private func wiggleAngleForMood() -> Angle {
@@ -666,54 +666,26 @@ struct FaceIDBracketsView: View {
     @State private var morphProgress: Double = 0
     @State private var rotationAngle: Double = 0
     
+    // Extracted computed properties to simplify body
+    private var pulseAmount: Double {
+        isActive ? sin(rotationAngle * .pi / 180) * 0.05 : 0
+    }
+    
+    private var gradientColors: [Color] {
+        isActive ? [color, color.opacity(0.6), color] : [color.opacity(0.6)]
+    }
+    
+    private var shadowColor: Color {
+        isActive ? color.opacity(0.5) : .clear
+    }
+    
+    private var shadowRadius: CGFloat {
+        isActive ? 8 : 0
+    }
+    
     var body: some View {
         GeometryReader { geo in
-            let width = geo.size.width
-            let height = geo.size.height
-            
-            ZStack {
-                // Enhanced morphing path (brackets → circle with pulse)
-                CircularBracketMorph(
-                    morphProgress: morphProgress,
-                    pulseAmount: isActive ? sin(rotationAngle * .pi / 180) * 0.05 : 0
-                )
-                .stroke(
-                    LinearGradient(
-                        colors: isActive ? [
-                            color,
-                            color.opacity(0.6),
-                            color
-                        ] : [
-                            color.opacity(0.6)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    style: StrokeStyle(
-                        lineWidth: 2,
-                        lineCap: .round,
-                        lineJoin: .round
-                    )
-                )
-                .rotationEffect(.degrees(rotationAngle))
-                .shadow(
-                    color: isActive ? color.opacity(0.5) : .clear,
-                    radius: isActive ? 8 : 0
-                )
-                
-                // Scanning particles (when active)
-                if isActive && morphProgress > 0.5 {
-                    ForEach(0..<3, id: \.self) { index in
-                        Circle()
-                            .fill(color.opacity(0.6))
-                            .frame(width: 4, height: 4)
-                            .offset(
-                                x: cos(rotationAngle * .pi / 180 + Double(index) * 120 * .pi / 180) * (width / 2 - 10),
-                                y: sin(rotationAngle * .pi / 180 + Double(index) * 120 * .pi / 180) * (height / 2 - 10)
-                            )
-                    }
-                }
-            }
+            bracketsContent(width: geo.size.width, height: geo.size.height)
         }
         .onChange(of: isActive) { active in
             if active {
@@ -724,13 +696,66 @@ struct FaceIDBracketsView: View {
         }
     }
     
+    @ViewBuilder
+    private func bracketsContent(width: CGFloat, height: CGFloat) -> some View {
+        ZStack {
+            bracketShape
+            
+            if isActive && morphProgress > 0.5 {
+                scanningParticles(width: width, height: height)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var bracketShape: some View {
+        CircularBracketMorph(
+            morphProgress: morphProgress,
+            pulseAmount: pulseAmount
+        )
+        .stroke(
+            LinearGradient(
+                colors: gradientColors,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            style: StrokeStyle(
+                lineWidth: 2,
+                lineCap: .round,
+                lineJoin: .round
+            )
+        )
+        .rotationEffect(.degrees(rotationAngle))
+        .shadow(color: shadowColor, radius: shadowRadius)
+    }
+    
+    @ViewBuilder
+    private func scanningParticles(width: CGFloat, height: CGFloat) -> some View {
+        ForEach(0..<3, id: \.self) { index in
+            Circle()
+                .fill(color.opacity(0.6))
+                .frame(width: 4, height: 4)
+                .offset(
+                    x: particleX(index: index, width: width),
+                    y: particleY(index: index, height: height)
+                )
+        }
+    }
+    
+    private func particleX(index: Int, width: CGFloat) -> CGFloat {
+        let angleRad = rotationAngle * .pi / 180 + Double(index) * 120 * .pi / 180
+        return CGFloat(cos(angleRad)) * (width / 2 - 10)
+    }
+    
+    private func particleY(index: Int, height: CGFloat) -> CGFloat {
+        let angleRad = rotationAngle * .pi / 180 + Double(index) * 120 * .pi / 180
+        return CGFloat(sin(angleRad)) * (height / 2 - 10)
+    }
+    
     private func startScanning() {
-        // Morph brackets into circle
         withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
             morphProgress = 1.0
         }
-        
-        // Continuous rotation
         withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
             rotationAngle = 360
         }

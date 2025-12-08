@@ -1,5 +1,6 @@
 import SwiftUI
 import QuartzCore
+import Combine
 
 // MARK: - High Performance Loop (120fps)
 // Uses CADisplayLink for ultra-low latency (8.33ms) updates

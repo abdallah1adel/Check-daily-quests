@@ -83,26 +83,26 @@ class FaceIDRig: ObservableObject {
         bones["root"] = root
         
         // Head bone (can rotate/tilt)
-        let head = FaceBone(id: "head", position: CGPoint(x: 0, y: -20), parentID: "root")
+        var head = FaceBone(id: "head", position: CGPoint(x: 0, y: -20), parentID: "root")
         bones["head"] = head
         
         // Left eye bone
-        let leftEye = FaceBone(id: "leftEye", position: CGPoint(x: -30, y: -10), parentID: "head")
+        var leftEye = FaceBone(id: "leftEye", position: CGPoint(x: -30, y: -10), parentID: "head")
         leftEye.rotationLimit = -30...30
         bones["leftEye"] = leftEye
         
         // Right eye bone
-        let rightEye = FaceBone(id: "rightEye", position: CGPoint(x: 30, y: -10), parentID: "head")
+        var rightEye = FaceBone(id: "rightEye", position: CGPoint(x: 30, y: -10), parentID: "head")
         rightEye.rotationLimit = -30...30
         bones["rightEye"] = rightEye
         
         // Nose bone (subtle movement)
-        let nose = FaceBone(id: "nose", position: CGPoint(x: 0, y: 5), parentID: "head")
+        var nose = FaceBone(id: "nose", position: CGPoint(x: 0, y: 5), parentID: "head")
         nose.rotationLimit = -5...5
         bones["nose"] = nose
         
         // Mouth bone
-        let mouth = FaceBone(id: "mouth", position: CGPoint(x: 0, y: 30), parentID: "head")
+        var mouth = FaceBone(id: "mouth", position: CGPoint(x: 0, y: 30), parentID: "head")
         mouth.rotationLimit = -15...15
         bones["mouth"] = mouth
         
@@ -538,31 +538,4 @@ struct FaceIDRiggedView: View {
     }
 }
 
-// MARK: - Color Extension
-
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-    }
-}
 

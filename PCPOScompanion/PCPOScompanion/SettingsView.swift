@@ -67,11 +67,7 @@ struct SettingsView: View {
                         ))
                         .textContentType(.password)
                         
-                        if speechManager.currentProvider == .elevenLabs {
-                            Text("Requires ElevenLabs API Key")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        } else if speechManager.currentProvider == .openAI {
+                        if speechManager.currentProvider == .openAI {
                             Text("Leave empty to use System Key")
                                 .font(.caption)
                                 .foregroundColor(.green)

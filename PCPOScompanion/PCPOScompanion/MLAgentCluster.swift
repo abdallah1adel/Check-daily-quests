@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreML
+import Combine
 
 // MARK: - ML Agent Cluster (Brain)
 // Distributed decision-making system with 4 specialized CoreML models

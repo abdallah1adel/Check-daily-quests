@@ -46,18 +46,17 @@ class SecureConfig {
             return envKey
         }
 
-        // Fallback to Config struct (will be removed in production)
-        return Config.openAIAPIKey
+        // Fallback to Config struct
+        let configKey = Config.openAIAPIKey
+        return configKey != "your_openai_api_key_here" ? configKey : nil
     }
-
-    var elevenLabsAPIKey: String? {
-        // Check environment first
-        if let envKey = ProcessInfo.processInfo.environment["ELEVENLABS_API_KEY"] {
+    
+    var huggingFaceToken: String? {
+        // Priority: Environment variable > Config struct
+        if let envKey = ProcessInfo.processInfo.environment["HUGGINGFACE_TOKEN"] {
             return envKey
         }
-
-        // Fallback to user settings (stored securely in Keychain)
-        return loadElevenLabsKeyFromKeychain()
+        return Config.huggingFaceToken
     }
 
     var storeKitSharedSecret: String? {
@@ -66,29 +65,18 @@ class SecureConfig {
 
     var isDevelopment: Bool {
         return ProcessInfo.processInfo.environment["APP_ENV"]?.lowercased() == "development" ||
-               Config.openAIAPIKey != "your_openai_api_key_here" // Fallback check
+               Config.openAIAPIKey != "your_openai_api_key_here"
     }
-
-    // MARK: - Keychain Integration
-
-    private func loadElevenLabsKeyFromKeychain() -> String? {
-        // TODO: Implement proper Keychain storage
-        // For now, return from UserDefaults (not secure!)
-        return UserDefaults.standard.string(forKey: "elevenlabs_api_key")
-    }
-
-    func saveElevenLabsKeyToKeychain(_ key: String) {
-        // TODO: Implement proper Keychain storage
-        // For now, save to UserDefaults (not secure!)
-        UserDefaults.standard.set(key, forKey: "elevenlabs_api_key")
+    
+    var hasValidOpenAIKey: Bool {
+        return openAIAPIKey?.hasPrefix("sk-") == true
     }
 
     // MARK: - Security Validation
 
     func validateAPIKeys() -> [String: Bool] {
         return [
-            "OpenAI": openAIAPIKey?.hasPrefix("sk-") == true,
-            "ElevenLabs": elevenLabsAPIKey?.count == 32, // ElevenLabs keys are 32 chars
+            "OpenAI": hasValidOpenAIKey,
             "StoreKit": storeKitSharedSecret?.isEmpty == false
         ]
     }
@@ -97,7 +85,6 @@ class SecureConfig {
         let validation = validateAPIKeys()
         print("🔐 Security Status:")
         print("  OpenAI API Key: \(validation["OpenAI"] == true ? "✅ Valid" : "❌ Invalid/Missing")")
-        print("  ElevenLabs API Key: \(validation["ElevenLabs"] == true ? "✅ Valid" : "❌ Invalid/Missing")")
         print("  StoreKit Shared Secret: \(validation["StoreKit"] == true ? "✅ Set" : "❌ Missing")")
         print("  Environment: \(isDevelopment ? "🛠️ Development" : "🚀 Production")")
     }
